@@ -1,23 +1,29 @@
 import pygame
 pygame.init()
 
-#window setup
+# Window setup
 width, height = 500, 600
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Car Simulation")
 
-#road setup
+# Road setup
 road_width = 400
-road_color = (54, 69, 79)  
-lane_color = (255, 255, 255)  
+road_color = (54, 69, 79)
+lane_color = (255, 255, 255)
 lane_count = 5
 
-#car setup
+# Car setup
 car_width, car_height = 40, 80
-car_color = (255, 105, 97)  
+car_color = (255, 105, 97)
 car_x = width // 2 - car_width // 2
-car_y = height // 2
-car_speed = 5
+car_y = height - 150  # Fixed position near the bottom
+
+car_speed = 3  # Scroll speed
+
+# Lane dash setup
+dash_length = 20
+space_length = 20
+lane_offset = 0  # Scroll controller
 
 running = True
 clock = pygame.time.Clock()
@@ -33,14 +39,13 @@ while running:
 
     road_left = (width - road_width) // 2
 
+    # Scroll lane lines upward
+    lane_offset -= car_speed
+    if lane_offset <= -(dash_length + space_length):
+        lane_offset = 0
+
+    # Lane changing
     keys = pygame.key.get_pressed()
-
-    if keys[pygame.K_UP]:
-        car_y -= car_speed
-
-    if keys[pygame.K_DOWN]:
-        car_y += car_speed
-
     if keys[pygame.K_LEFT]:
         car_x -= car_speed
         if car_x < road_left:
@@ -51,15 +56,18 @@ while running:
         if car_x + car_width > road_left + road_width:
             car_x = road_left + road_width - car_width
 
-    #road in the center
+    # Draw road
     pygame.draw.rect(screen, road_color, (road_left, 0, road_width, height))
 
-    #lane lines
     lane_width = road_width / lane_count
-    for i in range(0, lane_count+1):
+    for i in range(1, lane_count):
         line_x = road_left + int(i * lane_width)
-        pygame.draw.line(screen, lane_color, (line_x, 0), (line_x, height), 5)
+        y = -lane_offset 
+        while y < height:
+            pygame.draw.line(screen, lane_color, (line_x, y), (line_x, y + dash_length), 5)
+            y += dash_length + space_length
 
+    # Draw stationary car
     car_body = pygame.Rect(car_x, car_y, car_width, car_height)
     pygame.draw.rect(screen, car_color, car_body)
 
