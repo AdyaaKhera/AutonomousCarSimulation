@@ -17,6 +17,7 @@ car_width, car_height = 40, 80
 car_color = (255, 105, 97)  
 car_x = width // 2 - car_width // 2
 car_y = height // 2
+car_speed = 5
 
 running = True
 clock = pygame.time.Clock()
@@ -30,13 +31,32 @@ while running:
 
     screen.fill((119, 221, 119)) 
 
-    #road in the center
     road_left = (width - road_width) // 2
+
+    keys = pygame.key.get_pressed()
+
+    if keys[pygame.K_UP]:
+        car_y -= car_speed
+
+    if keys[pygame.K_DOWN]:
+        car_y += car_speed
+
+    if keys[pygame.K_LEFT]:
+        car_x -= car_speed
+        if car_x < road_left:
+            car_x = road_left
+
+    if keys[pygame.K_RIGHT]:
+        car_x += car_speed
+        if car_x + car_width > road_left + road_width:
+            car_x = road_left + road_width - car_width
+
+    #road in the center
     pygame.draw.rect(screen, road_color, (road_left, 0, road_width, height))
 
     #lane lines
     lane_width = road_width / lane_count
-    for i in range(1, lane_count):
+    for i in range(0, lane_count+1):
         line_x = road_left + int(i * lane_width)
         pygame.draw.line(screen, lane_color, (line_x, 0), (line_x, height), 5)
 
