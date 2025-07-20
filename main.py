@@ -125,14 +125,50 @@ while running:
                 obstacles.remove(obstacle)
                 score += 1
 
+        # --- LIDAR SENSORS ---
+        lidar_rays = [-45, -30, -15, 0, 15, 30, 45]  
+        lidar_max_range = random.randint(100, 150)  
+        start_x = car_x + car_width // 2
+        start_y = car_y
+
+        for angle in lidar_rays:
+            distance = 0
+            hit = False
+            rad = (angle / 180) * 3.14159
+            dx, dy = 0, 0  
+
+            while distance < lidar_max_range and not hit:
+                distance += 1
+                dx = int(distance * pygame.math.Vector2(0, -1).rotate(angle).x)
+                dy = int(distance * pygame.math.Vector2(0, -1).rotate(angle).y)
+                check_x = start_x + dx
+                check_y = start_y + dy
+
+                if check_x < road_left or check_x > road_left + road_width or check_y < 0:
+                    hit = True
+                    break
+
+                # Obstacle check
+                for obstacle in obstacles:
+                    obs_rect = pygame.Rect(obstacle[0], obstacle[1], obstacle_width, obstacle_height)
+                    if obs_rect.collidepoint(check_x, check_y):
+                        hit = True
+                        break
+
+            fade = 255 - int((distance / lidar_max_range) * 180)
+            fade = max(0, min(255, fade))
+            ray_color = (fade, fade, 0) 
+
+            # Draw the ray
+            pygame.draw.line(screen, ray_color, (start_x, start_y), (start_x + dx, start_y + dy), 2)
 
         # Draw stationary car
         car_body = pygame.Rect(car_x, car_y, car_width, car_height)
         pygame.draw.rect(screen, car_color, car_body)
 
         # Display car overtake number
-        score_bg_rect = pygame.Rect(0, 0, 260, 50) 
-        pygame.draw.rect(screen, (255, 255, 255), score_bg_rect, border_radius=5)  # White background    
+        score_bg_rect = pygame.Rect(0, 0, 280, 50) 
+        pygame.draw.rect(screen, (255, 255, 255), score_bg_rect, border_radius=5)  
         score_text = font.render(f"Cars overtaken: {score}", True, (0, 0, 0))
         screen.blit(score_text, (10, 10))
 
