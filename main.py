@@ -1,4 +1,5 @@
-import pygame
+import pygame, random
+
 pygame.init()
 
 # Window setup
@@ -17,6 +18,13 @@ car_width, car_height = 40, 80
 car_color = (255, 105, 97)
 car_x = width // 2 - car_width // 2
 car_y = height - 150  # Fixed position near the bottom
+
+# Obstacle cars setup
+obstacle_width, obstacle_height = 40, 80
+
+obstacles = []
+obstacle_spawn_delay = random.randint(30, 90)
+obstacle_spawn_timer = 0
 
 car_speed = 3  # Scroll speed
 
@@ -66,6 +74,48 @@ while running:
         while y < height:
             pygame.draw.line(screen, lane_color, (line_x, y), (line_x, y + dash_length), 5)
             y += dash_length + space_length
+
+    # Draw obstacle at intervals
+    obstacle_spawn_timer += 1
+    if obstacle_spawn_timer >= obstacle_spawn_delay:
+        obstacle_spawn_timer = 0
+        obstacle_spawn_delay = random.randint(30, 90)
+        num_obs_to_spawn = random.choices([1, 2], weights=[0.8, 0.2])[0]
+
+        # Mark occupied lanes 
+        occupied_lanes = set()
+        for obs in obstacles:
+            obs_lane_index = int((obs[0] - road_left) // (road_width / lane_count))
+            if obs[1] < obstacle_height * 2:  # Check if obstacle is near top
+                occupied_lanes.add(obs_lane_index)
+
+        available_lanes = [i for i in range(lane_count) if i not in occupied_lanes]
+
+        # Spawn obstacles only in free lanes 
+        if available_lanes:
+            num_to_spawn = min(len(available_lanes), random.choices([1, 2], weights=[0.8, 0.2])[0])
+
+            for _ in range(num_to_spawn):
+                lane_index = random.choice(available_lanes)
+                available_lanes.remove(lane_index)  # Mark lane as occupied now
+                lane_x = road_left + int(lane_index * (road_width / lane_count)) + (road_width / lane_count - obstacle_width) // 2
+                speed = random.randint(4, 6)
+                color = random.choice([
+                    (176, 224, 168),
+                    (174, 198, 207), 
+                    (230, 230, 250),
+                    (255,223,186),
+                    (255,255,186)
+                ])
+                obstacles.append([lane_x, -obstacle_height, speed, color])
+
+    for obstacle in obstacles[:]:
+        obstacle[1] += obstacle[2] # Move down - add to y coordinate
+        obstacle_rect = pygame.Rect(obstacle[0], obstacle[1], obstacle_width, obstacle_height)
+        pygame.draw.rect(screen, obstacle[3], obstacle_rect)
+        if obstacle[1] > height:
+            obstacles.remove(obstacle)
+
 
     # Draw stationary car
     car_body = pygame.Rect(car_x, car_y, car_width, car_height)
